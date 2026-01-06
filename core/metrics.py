@@ -33,15 +33,12 @@ def tensor2img(tensor, out_type=np.uint16, min_max=(-1, 1)):
         # Important. Unlike matlab, numpy.unit8() WILL NOT round by default.
     if out_type == np.uint16:
         img_np = (img_np * 65535.0).round()
-    return img_np.astype(out_type) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return img_np.astype(out_type) 
 
 
 def save_img(img, img_path, mode='RGB'):
     cv2.imwrite(img_path, img)
-    #cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))  #cv2.COLOR_BGR2RGB
-    #print('保存了一张图片')
-    #cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)) 
-    #cv2.imwrite(img_path, img)
+
 
 
 def calculate_psnr(img1, img2):

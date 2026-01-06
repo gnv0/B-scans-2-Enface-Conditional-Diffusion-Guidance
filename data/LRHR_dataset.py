@@ -15,19 +15,6 @@ from PIL import Image, ImageOps
 
 
 
-# def resize_and_convert(img, size, resample):
-#     if(img.size[0] != size):
-#         img = trans_fn.resize(img, size, resample) #首先将图像调整为目标尺寸，使用指定的重采样方法
-#         img = trans_fn.center_crop(img, size)  # 将图像进行居中裁剪，使其尺寸与目标尺寸完全匹配
-#     return img 
-
-# def resize_multiple(img, sizes=(16, 128), resample=Image.BICUBIC):
-#     lr_img = resize_and_convert(img, sizes[0], resample) #把img转化成size
-#     hr_img = resize_and_convert(img, sizes[1], resample) # 把图片
-#     sr_img = resize_and_convert(lr_img, sizes[1], resample)
-
-    # return [lr_img, hr_img, sr_img]
-
 def pad_to_nearest_power_of_2(x, base=32):
     w, h = x.size  
     new_w = (w + base - 1) // base * base
@@ -46,9 +33,9 @@ class LRHRDataset(Dataset):
         self.img_width = img_width
 
         self.sr_path = Util.get_paths_from_images(
-            '{}/abnormal'.format(dataroot)) #读取异常图片
+            '{}/abnormal'.format(dataroot)) 
         self.hr_path = Util.get_paths_from_images(
-            '{}/normal'.format(dataroot)) #读取异常对应的正常图片
+            '{}/normal'.format(dataroot))
 
         self.dataset_len = len(self.hr_path)
         
@@ -79,11 +66,6 @@ class LRHRDataset(Dataset):
         img_SR = cv2.imread(str(self.sr_path[index]), cv2.IMREAD_GRAYSCALE)
         img_SR = Image.fromarray(img_SR)
         img_SR, (pad_h, pad_w) = pad_to_nearest_power_of_2(img_SR)
-
-
-        # img_HR = trans_fn.resize(img_HR, (self.img_width, self.img_high), interpolation=InterpolationMode.BICUBIC)
-        # img_SR = trans_fn.resize(img_SR, (self.img_width, self.img_high), interpolation=InterpolationMode.BICUBIC)
-
 
         [img_SR, img_HR] = Util.transform_augment( 
             [img_SR, img_HR], split=self.split, min_max=(-1, 1))

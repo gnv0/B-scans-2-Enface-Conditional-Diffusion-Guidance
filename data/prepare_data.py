@@ -18,8 +18,8 @@ import cv2
 
 def resize_and_convert(img, size, resample):
     if(img.size[0] != size):
-        img = trans_fn.resize(img, size, resample) #首先将图像调整为目标尺寸，使用指定的重采样方法
-        img = trans_fn.center_crop(img, size)  # 将图像进行居中裁剪，使其尺寸与目标尺寸完全匹配
+        img = trans_fn.resize(img, size, resample) 
+        img = trans_fn.center_crop(img, size) 
     return img 
 
 
@@ -30,8 +30,8 @@ def image_convert_bytes(img):
 
 
 def resize_multiple(img, sizes=(16, 128), resample=Image.BICUBIC, lmdb_save=False):
-    lr_img = resize_and_convert(img, sizes[0], resample) #把img转化成size
-    hr_img = resize_and_convert(img, sizes[1], resample) # 把图片
+    lr_img = resize_and_convert(img, sizes[0], resample)
+    hr_img = resize_and_convert(img, sizes[1], resample) 
     sr_img = resize_and_convert(lr_img, sizes[1], resample)
 
     if lmdb_save:
@@ -106,8 +106,7 @@ def all_threads_inactive(worker_threads):
 
 def prepare(img_path, out_path, n_worker, sizes=(16, 128), resample=Image.BICUBIC, lmdb_save=False):
     resize_fn = partial(resize_worker, sizes=sizes,
-                        resample=resample, lmdb_save=lmdb_save) #将resize_worker函数的sizes、resample和lmdb_save参数固定为特定的值创建
-    # 这意味着，当调用resize_fn时，它将自动使用这些固定的参数值来调用resize_worker函数。
+                        resample=resample, lmdb_save=lmdb_save) 
 
     files = [p for p in Path(
         '{}'.format(img_path)).glob(f'**/*')]
@@ -135,7 +134,7 @@ def prepare(img_path, out_path, n_worker, sizes=(16, 128), resample=Image.BICUBI
         for i in range(n_worker):
             proc = Process(target=prepare_process_worker, args=(wctx, file_subsets[i]))
             proc.start()
-            worker_threads.append(proc) #将进程对象添加到worker_threads列表中。
+            worker_threads.append(proc) 
         
         total_count = str(len(files))
         while not all_threads_inactive(worker_threads):

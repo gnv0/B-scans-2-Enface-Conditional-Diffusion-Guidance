@@ -41,7 +41,7 @@
         }
     },
     "model": {
-        "which_model_G": "sr3", 
+        "which_model_G": "oct", 
         "finetune_norm": false,
         "unet": {
             "in_channel": 2, 

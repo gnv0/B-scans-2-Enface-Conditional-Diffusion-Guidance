@@ -46,16 +46,16 @@ class DDPM(BaseModel):
         self.data = self.set_device(data)
 
     def optimize_parameters(self):
-        self.optG.zero_grad() #首先将生成器的梯度清零
-        l_pix = self.netG(self.data) #这是生成的图像
+        self.optG.zero_grad() 
+        l_pix = self.netG(self.data) 
         # need to average in multi-gpu
         b, c, h, w = self.data['HR'].shape
-        l_pix = l_pix.sum()/int(b*c*h*w) #计算生成图像的平均像素损失
-        l_pix.backward() #自动求导机制，用于计算梯度。调用 backward 方法保存梯度信息
-        self.optG.step() #更新生成器optG 参数的步骤 
+        l_pix = l_pix.sum()/int(b*c*h*w) 
+        l_pix.backward()
+        self.optG.step() 
 
         # set log
-        self.log_dict['l_pix'] = l_pix.item() #这是损失
+        self.log_dict['l_pix'] = l_pix.item() 
 
     def test(self, continous=False):
         self.netG.eval()
