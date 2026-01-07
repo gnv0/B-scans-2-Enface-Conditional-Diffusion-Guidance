@@ -27,7 +27,7 @@ dataroot/
 │   ├── img-0001.png
 │   ├── img-0002.png
 │   └── ...
-└── normal/      # Normal B-scans (for training)
+└── normal/      # Normal B-scans 
     ├── img-0001.png
     ├── img-0002.png
     └── ...
