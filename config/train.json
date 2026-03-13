@@ -1,66 +1,56 @@
 {
-    "name": "OCTA",
-    "phase": "train", // train or val
-    "gpu_ids": [
-        0,1,2,3
-    ],
-    "path": { //set the path
+    "name": "",
+    "phase": "", // train or val
+    "gpu_ids": [0],
+    "path": {
         "log": "logs",
         "tb_logger": "tb_logger",
         "results": "results",
         "checkpoint": "checkpoint",
-        // "resume_state": null
-        "resume_state": "" 
-        
+        "resume_state": null
     },
     "datasets": {
         "train": {
             "name": "OCTA",
-            "mode": "HR", 
+            "mode": "HR",
             "dataroot": "",
-            "datatype": "img", 
-            "l_resolution": 16, 
-            "r_resolution": 256, 
-            "batch_size": 8,
+            "datatype": "img",
+            "l_resolution": 16,
+            "r_resolution": 256,
+            "batch_size": 6,
             "num_workers": 8,
             "use_shuffle": true,
             "image_high": 800,
             "image_width": 288,
-            "data_len": -1 
+            "data_len": -1,
+            "style_ref_mode": "" 
         },
         "val": {
             "name": "OCTA",
             "mode": "HR",
-            "dataroot": "", 
-            "datatype": "img", //lmdb or img, path of img files
+            "dataroot": "",
+            "datatype": "img",
             "l_resolution": 16,
             "r_resolution": 256,
             "image_high": 800,
             "image_width": 288,
-            "data_len":-1 
+            "data_len": -1,
+            "style_ref_mode": "paired"
         }
     },
     "model": {
-        "which_model_G": "oct", 
+        "which_model_G": "", 
         "finetune_norm": false,
         "unet": {
-            "in_channel": 2, 
+            "in_channel": 2,
             "out_channel": 1,
             "inner_channel": 64,
-            "channel_multiplier": [
-                1,
-                2,
-                4,
-                8,
-                8
-            ],
-            "attn_res": [
-                16
-            ],
+            "channel_multiplier": [1, 2, 4, 8, 8],
+            "attn_res": [16],
             "res_blocks": 2,
             "dropout": 0.5
         },
-        "beta_schedule": { 
+        "beta_schedule": {
             "train": {
                 "schedule": "linear",
                 "n_timestep": 1100,
@@ -69,35 +59,34 @@
             },
             "val": {
                 "schedule": "linear",
-                "n_timestep": 1100, 
+                "n_timestep": 1100,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             }
         },
         "diffusion": {
-            //"image_size": 128,
             "image_high": 800,
             "image_width": 288,
-            "channels": 1, //sample channel
-            "conditional": true // unconditional generation or unconditional generation
+            "channels": 1,
+            "conditional": true
         }
     },
     "train": {
-        "n_iter": 10000,
-        "val_freq": 1000, //1e4***************************************************
-        "save_checkpoint_freq": 1000,
-        "print_freq": 50,
+        "n_iter": 100000,
+        "val_freq": 2e3,
+        "save_checkpoint_freq": 6e3,
+        "print_freq": 200,
         "optimizer": {
             "type": "adam",
-            "lr": 1e-4 
+            "lr": 1e-4
         },
-        "ema_scheduler": { // not used now
+        "ema_scheduler": {
             "step_start_ema": 5000,
             "update_ema_every": 1,
             "ema_decay": 0.999
         }
     },
     "wandb": {
-        "project": "sr_ffhq"
+        "project": ""
     }
 }

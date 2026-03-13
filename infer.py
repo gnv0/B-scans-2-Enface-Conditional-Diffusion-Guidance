@@ -11,7 +11,7 @@ import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='config/sr_sr3_64_512.json',
+    parser.add_argument('-c', '--config', type=str, default='config/oct_style.json',
                         help='JSON file for configuration')
     parser.add_argument('-p', '--phase', type=str, choices=['val'], help='val(generation)', default='val')
     parser.add_argument('-gpu', '--gpu_ids', type=str, default=None)
@@ -66,6 +66,7 @@ if __name__ == "__main__":
     os.makedirs(result_path, exist_ok=True)
     for _,  val_data in enumerate(val_loader):
         idx += 1
+        style_ref_img = Metrics.tensor2img(val_data['STYLE_REF']) if 'STYLE_REF' in val_data else None
         diffusion.feed_data(val_data)
         diffusion.test(continous=True)
         visuals = diffusion.get_current_visuals(need_LR=False)
@@ -93,6 +94,9 @@ if __name__ == "__main__":
             hr_img, '{}/{}_{}_hr.png'.format(result_path, current_step, idx))
         Metrics.save_img(
             fake_img, '{}/{}_{}_inf.png'.format(result_path, current_step, idx))
+        if style_ref_img is not None:
+            Metrics.save_img(
+                style_ref_img, '{}/{}_{}_style_ref.png'.format(result_path, current_step, idx))
 
         if wandb_logger and opt['log_infer']:
             wandb_logger.log_eval_data(fake_img, Metrics.tensor2img(visuals['SR'][-1]), hr_img)

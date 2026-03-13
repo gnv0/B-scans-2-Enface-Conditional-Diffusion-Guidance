@@ -243,8 +243,10 @@ class UNet(nn.Module):
         for layer in self.downs:
             if isinstance(layer, ResnetBlocWithAttn):
                 x = layer(x, t)
+                #print('11111',x.shape)
             else:
                 x = layer(x)
+                #print('11111',x.shape)
             feats.append(x)
 
         for layer in self.mid:

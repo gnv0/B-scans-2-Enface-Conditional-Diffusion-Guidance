@@ -24,11 +24,13 @@ def create_dataloader(dataset, dataset_opt, phase):
 def create_dataset(dataset_opt, phase):
     '''create dataset'''
     from data.LRHR_dataset import LRHRDataset as D
+    style_ref_mode = dataset_opt.get('style_ref_mode', 'random' if phase == 'train' else 'paired')
     dataset = D(dataroot=dataset_opt['dataroot'],
                 img_high = dataset_opt['image_high'],
                 img_width = dataset_opt['image_width'],
                 split=phase,
                 data_len=dataset_opt['data_len'],
+                style_ref_mode=style_ref_mode,
                 )
     logger = logging.getLogger('base')
     logger.info('Dataset [{:s} - {:s}] is created.'.format(dataset.__class__.__name__,

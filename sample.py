@@ -12,7 +12,7 @@ import numpy as np
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='config/sample_sr3_128.json',
+    parser.add_argument('-c', '--config', type=str, default='config/oct_style.json',
                         help='JSON file for configuration')
     parser.add_argument('-p', '--phase', type=str, choices=['train', 'val'],
                         help='Run either train(training) or val(generation)', default='train')
@@ -24,7 +24,6 @@ if __name__ == "__main__":
     # parse configs
     args = parser.parse_args()
     opt = Logger.parse(args)
-    # Convert to NoneDict, which return None for missing key.
     opt = Logger.dict_to_nonedict(opt)
 
     # logging

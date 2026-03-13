@@ -264,7 +264,8 @@ class GaussianDiffusion(nn.Module):
             extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
             extract(self.sqrt_one_minus_alphas_cumprod,
                     t, x_start.shape) * noise
-        )
+        ) #这里对应的是公式4
+    
         # random gama
         # x_shape = x_start.shape
         # l = self.alphas_cumprod .gather(-1, t)
@@ -275,14 +276,14 @@ class GaussianDiffusion(nn.Module):
         #     nq.sqrt(gama) * x_start + nq.sqrt(1-gama)* noise
         # )
 
-    def p_losses(self, x_in, noise=None):
+    def p_losses(self, x_in, noise=None): #p是前向还是后向啊 
         x_start = x_in['HR']
         [b, c, h, w] = x_start.shape
         t = torch.randint(0, self.num_timesteps, (b,),
                           device=x_start.device).long()
 
         noise = default(noise, lambda: torch.randn_like(x_start))
-        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
+        x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise) #前向过程
 
         if not self.conditional:
             x_recon = self.denoise_fn(x_noisy, t)
@@ -290,7 +291,6 @@ class GaussianDiffusion(nn.Module):
             x_recon = self.denoise_fn(
                 torch.cat([x_in['SR'], x_noisy], dim=1), t)
         loss = self.loss_func(noise, x_recon)
-
         return loss
 
     def forward(self, x, *args, **kwargs):

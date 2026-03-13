@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from torch.nn import init
 from torch.nn import modules
+from .vgg19 import VGG19
+
 logger = logging.getLogger('base')
 ####################
 # initialize
@@ -84,8 +86,15 @@ def define_G(opt):
     model_opt = opt['model']
     if model_opt['which_model_G'] == 'ddpm':
         from .ddpm_modules import diffusion, unet
+    elif model_opt['which_model_G'] == 'sr3':
+        from .sr3_modules import diffusion, unet
     elif model_opt['which_model_G'] == 'oct':
         from .oct_modules import diffusion, unet
+    elif model_opt['which_model_G'] == 'updated_oct':
+        from .updated_oct_modules import diffusion, unet
+    else:
+        raise NotImplementedError(
+            'which_model_G [{:s}] is not supported'.format(model_opt['which_model_G']))
     if ('norm_groups' not in model_opt['unet']) or model_opt['unet']['norm_groups'] is None:
         model_opt['unet']['norm_groups']=32
     model = unet.UNet(

@@ -13,7 +13,7 @@ class DDPM(BaseModel):
     def __init__(self, opt):
         super(DDPM, self).__init__(opt)
         # define network and load pretrained models
-        self.netG = self.set_device(networks.define_G(opt))
+        self.netG = self.set_device(networks.define_G(opt)) 
         self.schedule_phase = None
 
         # set loss and load resume state
@@ -52,7 +52,7 @@ class DDPM(BaseModel):
         b, c, h, w = self.data['HR'].shape
         l_pix = l_pix.sum()/int(b*c*h*w) 
         l_pix.backward()
-        self.optG.step() 
+        self.optG.step()  
 
         # set log
         self.log_dict['l_pix'] = l_pix.item() 
@@ -62,10 +62,10 @@ class DDPM(BaseModel):
         with torch.no_grad():
             if isinstance(self.netG, nn.DataParallel):
                 self.SR = self.netG.module.super_resolution(
-                    self.data['SR'], continous)
+                    self.data, continous)
             else:
                 self.SR = self.netG.super_resolution(
-                    self.data['SR'], continous)
+                    self.data, continous)
         self.netG.train()
 
     def sample(self, batch_size=1, continous=False):
@@ -98,17 +98,12 @@ class DDPM(BaseModel):
     def get_current_visuals(self, need_LR=True, sample=False):
         out_dict = OrderedDict()
         out_dict['number'] = self.data['number']
-
-
         if sample:
             out_dict['SAM'] = self.SR.detach().float().cpu()
         else:
             out_dict['SR'] = self.SR.detach().float().cpu()
-
             out_dict['INF'] = self.data['SR'].detach().float().cpu()
-
             out_dict['HR'] = self.data['HR'].detach().float().cpu()
-
             if need_LR and 'LR' in self.data:
                 out_dict['LR'] = self.data['LR'].detach().float().cpu()
             else:

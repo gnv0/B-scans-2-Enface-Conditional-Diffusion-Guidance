@@ -10,11 +10,15 @@ from tensorboardX import SummaryWriter
 import os
 import numpy as np
 
-#python train.py -p train -c config/train.json
+# CUDA_VISIBLE_DEVICES=0,1,2,3 python sr.py -p train -c config/sr_sr3.json
+# python sr.py -p val -c config/sr_sr3.json
+# nohup python sr.py -p val -c config/sr_sr3.json > Log_record/20241019 2>&1 &
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='config/train.json',
+    parser.add_argument('-c', '--config', type=str, default='config/oct_style.json',
                         help='JSON file for configuration')
     parser.add_argument('-p', '--phase', type=str, choices=['train', 'val'],
                         help='Run either train(training) or val(generation)', default='train')
@@ -24,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('-log_wandb_ckpt', action='store_true')
     parser.add_argument('-log_eval', action='store_true')
 
+    val_model = ''
     # parse configs
     args = parser.parse_args()
     
@@ -31,7 +36,6 @@ if __name__ == "__main__":
     
     # Convert to NoneDict, which return None for missing key.
     opt = Logger.dict_to_nonedict(opt)
-
 
     # logging
     torch.backends.cudnn.enabled = True 
@@ -54,17 +58,6 @@ if __name__ == "__main__":
         val_step = 0
     else:
         wandb_logger = None
-
-    
-    def unpad(x, pad_h, pad_w):
-        if x.dim() == 3: 
-            c, h, w = x.shape
-            return x[:, :max(h - pad_h, 0), :max(w - pad_w, 0)]
-        elif x.dim() == 4: 
-            b, c, h, w = x.shape
-            return x[:, :, :max(h - pad_h, 0), :max(w - pad_w, 0)]
-        else:
-            raise ValueError(f"Unsupported input shape: {x.shape}") 
 
     # dataset
     for phase, dataset_opt in opt['datasets'].items():
@@ -96,14 +89,13 @@ if __name__ == "__main__":
         opt['model']['beta_schedule'][opt['phase']], schedule_phase=opt['phase'])
     
     #diffusion.print_network()
-
     if opt['phase'] == 'train':
         while current_step < n_iter:
             current_epoch += 1
             for _, train_data in enumerate(train_loader):
                 current_step += 1
                 if current_step > n_iter:
-                    break
+                    break 
                 diffusion.feed_data(train_data)
                 diffusion.optimize_parameters()
                 # log
@@ -130,20 +122,17 @@ if __name__ == "__main__":
                     diffusion.set_new_noise_schedule(
                         opt['model']['beta_schedule']['val'], schedule_phase='val')
 
+
                     for _,  val_data in enumerate(val_loader):
                         idx += 1
+                        style_ref_img = Metrics.tensor2img(val_data['STYLE_REF']) if 'STYLE_REF' in val_data else None
                         diffusion.feed_data(val_data)
                         diffusion.test(continous=False)
                         visuals = diffusion.get_current_visuals()
-
-                        visuals['SR'] = unpad(visuals['SR'], val_data['pad_h'], val_data['pad_w'])
-                        visuals['HR'] = unpad(visuals['HR'], val_data['pad_h'], val_data['pad_w'])
-                        visuals['INF'] = unpad(visuals['INF'], val_data['pad_h'], val_data['pad_w'])
-
                         sr_img = Metrics.tensor2img(visuals['SR'])  # uint8
                         hr_img = Metrics.tensor2img(visuals['HR'])  # uint8
                         inf_img = Metrics.tensor2img(visuals['INF'])
-
+                        
                         # generation
                         Metrics.save_img(
                             hr_img, '{}/{}_{}_hr.png'.format(result_path, current_step, idx))
@@ -151,7 +140,11 @@ if __name__ == "__main__":
                             sr_img, '{}/{}_{}_sr.png'.format(result_path, current_step, idx))
                         Metrics.save_img(
                             inf_img, '{}/{}_{}_inf.png'.format(result_path, current_step, idx))
+                        if style_ref_img is not None:
+                            Metrics.save_img(
+                                style_ref_img, '{}/{}_{}_style_ref.png'.format(result_path, current_step, idx))
                         
+
                         avg_psnr += Metrics.calculate_psnr(
                             sr_img, hr_img)
 
@@ -200,21 +193,18 @@ if __name__ == "__main__":
         result_path = '{}'.format(opt['path']['results'])
         os.makedirs(result_path, exist_ok=True)
 
-
         for _,  val_data in enumerate(val_loader):
             idx += 1
+            style_ref_img = Metrics.tensor2img(val_data['STYLE_REF']) if 'STYLE_REF' in val_data else None
             diffusion.feed_data(val_data)
             diffusion.test(continous=True)
             visuals = diffusion.get_current_visuals()
-
-            visuals['SR'] = unpad(visuals['SR'], val_data['pad_h'], val_data['pad_w'])
-            visuals['HR'] = unpad(visuals['HR'], val_data['pad_h'], val_data['pad_w'])
-            visuals['INF'] = unpad(visuals['INF'], val_data['pad_h'], val_data['pad_w'])
 
             hr_img = Metrics.tensor2img(visuals['HR'])  # uint8
             lr_img = Metrics.tensor2img(visuals['LR'])  # uint8
             fake_img = Metrics.tensor2img(visuals['INF']) 
             number = int(visuals['number'])
+
 
             sr_img_mode = 'single'
             if sr_img_mode == 'single':
@@ -239,6 +229,9 @@ if __name__ == "__main__":
                 lr_img, '{}/{}_{}_lr.png'.format(result_path, current_step, number))
             Metrics.save_img(
                 fake_img, '{}/{}_{}_inf.png'.format(result_path, current_step, number))
+            if style_ref_img is not None:
+                Metrics.save_img(
+                    style_ref_img, '{}/{}_{}_style_ref.png'.format(result_path, current_step, number))
 
             # generation
             eval_psnr = Metrics.calculate_psnr(Metrics.tensor2img(visuals['SR'][-1]), hr_img)

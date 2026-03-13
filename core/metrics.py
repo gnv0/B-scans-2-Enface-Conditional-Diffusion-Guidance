@@ -5,7 +5,7 @@ import cv2
 from torchvision.utils import make_grid
 
 
-def tensor2img(tensor, out_type=np.uint16, min_max=(-1, 1)):
+def tensor2img(tensor, out_type=np.uint8, min_max=(-1, 1)):
     '''
     Converts a torch Tensor into an image Numpy array
     Input: 4D(B,(3/1),H,W), 3D(C,H,W), or 2D(H,W), any range, RGB channel order
@@ -31,14 +31,14 @@ def tensor2img(tensor, out_type=np.uint16, min_max=(-1, 1)):
     if out_type == np.uint8:
         img_np = (img_np * 255.0).round()
         # Important. Unlike matlab, numpy.unit8() WILL NOT round by default.
-    if out_type == np.uint16:
-        img_np = (img_np * 65535.0).round()
-    return img_np.astype(out_type) 
+    return img_np.astype(out_type)
 
 
 def save_img(img, img_path, mode='RGB'):
-    cv2.imwrite(img_path, img)
-
+    print(img.shape)
+    cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_GRAY2RGB))  #cv2.COLOR_BGR2RGB
+    #cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)) 
+    #cv2.imwrite(img_path, img)
 
 
 def calculate_psnr(img1, img2):
